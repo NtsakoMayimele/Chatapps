@@ -1,80 +1,105 @@
-package prog5121;
+import prog5121.Message;
 
-public class login {
+import org.junit.After;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
-    private String firstName;
-    private String lastName;
-    private String username;
-    private String password;
-    private String cellPhoneNumber;
+public class MessageTest {
 
-    private static String storedUsername;
-    private static String storedPassword;
-    private static String storedFirstName;
-    private static String storedLastName;
-
-    public login(String firstName, String lastName, String username, String password, String cellPhoneNumber) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.username = username;
-        this.password = password;
-        this.cellPhoneNumber = cellPhoneNumber;
+    // Reset static state after every test so tests don't interfere with each other
+    @After
+    public void tearDown() {
+        Message.clearMessages();
     }
 
-    public boolean checkUserName() {
-        return username != null && username.contains("_") && username.length() <= 5;
+    // ===========================
+    //   assertEquals Tests
+    // ===========================
+
+    @Test
+    public void testMessageLength_Success() {
+        Message msg = new Message(0, "+27718693002", "Hi Mike, can you join us for dinner tonight?");
+        assertEquals("Message ready to send.", msg.checkMessageLength());
     }
 
-    public boolean checkPasswordComplexity() {
-        if (password == null || password.length() < 8) return false;
-        boolean hasUpper = false, hasDigit = false, hasSpecial = false;
-        for (char c : password.toCharArray()) {
-            if (Character.isUpperCase(c))      hasUpper = true;
-            if (Character.isDigit(c))          hasDigit = true;
-            if (!Character.isLetterOrDigit(c)) hasSpecial = true;
-        }
-        return hasUpper && hasDigit && hasSpecial;
+    @Test
+    public void testMessageLength_Failure() {
+        // 260 characters — exceeds limit by 10
+        String longMessage = "A".repeat(260);
+        Message msg = new Message(0, "+27718693002", longMessage);
+        assertEquals("Message exceeds 250 characters by 10; please reduce the size.", msg.checkMessageLength());
     }
 
-    public boolean checkCellPhoneNumber() {
-        if (cellPhoneNumber == null) return false;
-        return cellPhoneNumber.matches("^\\+[0-9]{9,12}$");
+    @Test
+    public void testRecipientCell_Success() {
+        Message msg = new Message(0, "+27718693002", "Hi Mike, can you join us for dinner tonight?");
+        assertEquals("Cell phone number successfully captured.", msg.checkRecipientCell());
     }
 
-    public String registerUser() {
-        if (!checkUserName()) {
-            return "Username is not correctly formatted; please ensure that your username contains an underscore and is no more than five characters in length.";
-        }
-        if (!checkPasswordComplexity()) {
-            return "Password is not correctly formatted; please ensure that the password contains at least eight characters, a capital letter, a number, and a special character.";
-        }
-        if (!checkCellPhoneNumber()) {
-            return "Cell phone number incorrectly formatted or does not contain international code; please correct the number and try again.";
-        }
-        storedUsername = this.username;
-        storedPassword = this.password;
-        storedFirstName = this.firstName;
-        storedLastName = this.lastName;
-        return "Username successfully captured.\nPassword successfully captured.\nCell phone number successfully added.";
+    @Test
+    public void testRecipientCell_Failure() {
+        // No international code — should fail
+        Message msg = new Message(0, "08575975889", "Hi Keegan, did you receive the payment?");
+        assertEquals(
+            "Cell phone number is incorrectly formatted or does not contain an international code. "
+            + "Please correct the number and try again.",
+            msg.checkRecipientCell()
+        );
     }
 
-    public boolean loginUser(String enteredUsername, String enteredPassword) {
-        return storedUsername != null && storedPassword != null
-                && storedUsername.equals(enteredUsername)
-                && storedPassword.equals(enteredPassword);
+    @Test
+    public void testMessageHash_Correct() {
+        // Force messageID to start with "00" so the hash is deterministic
+        Message msg = new Message(0, "+27718693002",
+                "Hi Mike, can you join us for dinner tonight?", "0012345678");
+        assertEquals("00:0:HITONIGHT", msg.createMessageHash());
     }
 
-    public String returnLoginStatus(String enteredUsername, String enteredPassword) {
-        if (loginUser(enteredUsername, enteredPassword)) {
-            return "Welcome " + storedFirstName + " " + storedLastName + ", it is great to see you.";
-        }
-        return "Username or password incorrect, please try again.";
+    @Test
+    public void testMessageID_Created() {
+        Message msg = new Message(0, "+27718693002", "Hi Mike, can you join us for dinner tonight?");
+        // The ID must be generated and no more than 10 characters
+        System.out.println("Message ID generated: " + msg.getMessageID());
+        assertTrue(msg.checkMessageID());
     }
 
-    public static void resetStoredUser() {
-        storedUsername = null;
-        storedPassword = null;
-        storedFirstName = null;
-        storedLastName = null;
+    @Test
+    public void testSentMessage_Send() {
+        Message msg = new Message(0, "+27718693002", "Hi Mike, can you join us for dinner tonight?");
+        assertEquals("Message successfully sent.", msg.sentMessage("1"));
+    }
+
+    @Test
+    public void testSentMessage_Disregard() {
+        Message msg = new Message(0, "+27718693002", "Hi Mike, can you join us for dinner tonight?");
+        assertEquals("Press 0 to delete the message.", msg.sentMessage("2"));
+    }
+
+    @Test
+    public void testSentMessage_Store() {
+        Message msg = new Message(0, "+27718693002", "Hi Mike, can you join us for dinner tonight?");
+        assertEquals("Message successfully stored.", msg.sentMessage("3"));
+    }
+
+    // ===========================
+    //   assertTrue / assertFalse Tests
+    // ===========================
+
+    @Test
+    public void testMessageID_Valid() {
+        Message msg = new Message(0, "+27718693002", "Hi Mike, can you join us for dinner tonight?");
+        assertTrue(msg.checkMessageID());
+    }
+
+    @Test
+    public void testRecipientCell_ValidReturnsTrue() {
+        Message msg = new Message(0, "+27718693002", "test");
+        assertTrue(msg.checkRecipientCell().contains("successfully"));
+    }
+
+    @Test
+    public void testRecipientCell_InvalidReturnsFalse() {
+        Message msg = new Message(0, "08575975889", "test");
+        assertFalse(msg.checkRecipientCell().contains("successfully"));
     }
 }
