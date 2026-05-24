@@ -1,4 +1,4 @@
-package prog5121;
+// Message class for QuickChat Part 2 - handles messaging featurespackage prog5121;
 
 import java.util.ArrayList;
 import java.util.Random;

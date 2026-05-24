@@ -1,3 +1,4 @@
+// Unit tests for Message class
 import prog5121.Message;
 
 import org.junit.After;

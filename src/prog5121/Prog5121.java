@@ -1,3 +1,4 @@
+// Main class for QuickChat - handles registration, login and messaging
 package prog5121;
 
 import java.util.Scanner;
