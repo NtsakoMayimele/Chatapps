@@ -51,8 +51,11 @@ public class Prog5121 {
             return;
         }
 
-        // ===== PART 2: Messaging =====
+        // ===== PART 2 & 3: Messaging =====
         System.out.println("\nWelcome to QuickChat.");
+
+        // Load any previously stored messages from JSON at startup
+        Message.loadStoredMessagesFromJSON("messages.json");
 
         int maxMessages = 0;
         while (maxMessages <= 0) {
@@ -73,7 +76,8 @@ public class Prog5121 {
         while (running) {
             System.out.println("\n1) Send Messages");
             System.out.println("2) Show recently sent messages");
-            System.out.println("3) Quit");
+            System.out.println("3) Stored Messages");   // Part 3
+            System.out.println("0) Quit");
             System.out.print("Choose an option: ");
             String menuChoice = scanner.nextLine().trim();
 
@@ -131,15 +135,22 @@ public class Prog5121 {
                     break;
 
                 case "2":
-                    System.out.println("Coming Soon.");
+                    System.out.println("\n--- Recently Sent Messages ---");
+                    System.out.println(msgUtil.printMessages());
                     break;
 
                 case "3":
+                    // Part 3 — Stored Messages sub-menu
+                    Part3Menu part3 = new Part3Menu(scanner, firstName + " " + lastName);
+                    part3.showMenu();
+                    break;
+
+                case "0":
                     running = false;
                     break;
 
                 default:
-                    System.out.println("Invalid option. Please enter 1, 2, or 3.");
+                    System.out.println("Invalid option. Please enter 1, 2, 3, or 0.");
             }
         }
 
